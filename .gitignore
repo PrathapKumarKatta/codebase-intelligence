@@ -56,3 +56,5 @@ backend/storage/
 *.swo
 .idea/
 .vscode/
+.local-demo.json
+sample_projects/microservice.zip

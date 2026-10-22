@@ -1,4 +1,4 @@
-version: "3.8"
+name: codebase-intelligence
 
 services:
   postgres:
@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-codebase_intelligence}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -24,7 +24,7 @@ services:
     container_name: codebase_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -32,11 +32,13 @@ services:
       retries: 5
 
   backend:
+    image: codebase-intelligence-backend:local
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: codebase_backend
     restart: unless-stopped
+    command: ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
       - APP_NAME=Codebase Intelligence
       - APP_ENV=production
@@ -51,10 +53,12 @@ services:
       - LLM_PROVIDER=${LLM_PROVIDER:-mock}
       - LLM_API_KEY=${LLM_API_KEY:-}
       - STORAGE_DIR=/app/storage
+      - HF_HOME=/app/models
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8002:8000"
     volumes:
       - storage_data:/app/storage
+      - model_cache:/app/models
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,12 +71,10 @@ services:
       retries: 3
 
   worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: codebase-intelligence-backend:local
     container_name: codebase_worker
     restart: unless-stopped
-    command: ["celery", "-A", "app.workers.celery_app", "worker", "--loglevel=info"]
+    command: ["celery", "-A", "app.workers.celery_app", "worker", "--include=app.workers.tasks", "--loglevel=info", "--concurrency=2"]
     environment:
       - APP_NAME=Codebase Intelligence
       - APP_ENV=production
@@ -84,15 +86,17 @@ services:
       - EMBEDDING_PROVIDER=sentence_transformers
       - EMBEDDING_MODEL_NAME=BAAI/bge-small-en-v1.5
       - STORAGE_DIR=/app/storage
+      - HF_HOME=/app/models
     volumes:
       - storage_data:/app/storage
+      - model_cache:/app/models
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       backend:
-        condition: service_started
+        condition: service_healthy
 
   frontend:
     build:
@@ -101,10 +105,11 @@ services:
     container_name: codebase_frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "127.0.0.1:3002:80"
     depends_on:
       - backend
 
 volumes:
   postgres_data:
   storage_data:
+  model_cache:

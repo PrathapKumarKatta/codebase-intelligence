@@ -1,5 +1,7 @@
 # Codebase Intelligence — AI Codebase Assistant
 
+> On this computer, use **http://127.0.0.1:3002/** for the app and **http://127.0.0.1:8002/api/v1/docs** for the API. See [LOCAL_SETUP.md](LOCAL_SETUP.md) for the configured ports, commands, and mock-answer limitation. These ports let TaskFlow continue running alongside this project.
+
 [![CI Pipeline](https://github.com/developer/codebase-intelligence/actions/workflows/ci.yml/badge.svg)](https://github.com/developer/codebase-intelligence/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)

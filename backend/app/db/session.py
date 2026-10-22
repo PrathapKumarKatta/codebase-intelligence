@@ -1,14 +1,14 @@
 from typing import Generator
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from app.core.config import settings
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-)
+engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True, **(
+    {"poolclass": NullPool, "connect_args": {"prepare_threshold": None}}
+    if settings.INGESTION_MODE == "inline"
+    else {"pool_size": 10, "max_overflow": 20}
+))
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -11,7 +11,8 @@ import {
   User,
 } from "../types";
 
-const BASE_URL = "/api/v1";
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+const BASE_URL = `${API_ORIGIN}/api/v1`;
 
 export function getToken(): string | null {
   return localStorage.getItem("codebase_access_token");
@@ -79,7 +80,8 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
 
-  getMe: (): Promise<User> => request<User>("/auth/me"),
+  getMe: (token?: string): Promise<User> =>
+    request<User>("/auth/me", token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
 
   // Projects
   createProject: (name: string): Promise<Project> =>

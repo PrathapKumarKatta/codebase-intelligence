@@ -114,8 +114,40 @@ class MockEmbeddingProvider(EmbeddingProvider):
         return self._hash_to_vec(text)
 
 
+class FastEmbedEmbedding(EmbeddingProvider):
+    """ONNX BGE embeddings for the lightweight serverless package."""
+
+    _model = None
+
+    @property
+    def dimension(self) -> int:
+        return settings.EMBEDDING_DIMENSION
+
+    @property
+    def model_name(self) -> str:
+        return settings.EMBEDDING_MODEL_NAME
+
+    def _ensure_model(self):
+        if FastEmbedEmbedding._model is None:
+            from fastembed import TextEmbedding
+            FastEmbedEmbedding._model = TextEmbedding(
+                model_name=self.model_name, cache_dir="/tmp/fastembed", threads=1
+            )
+        return FastEmbedEmbedding._model
+
+    def embed_documents(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+        if not texts:
+            return []
+        return [vector.tolist() for vector in self._ensure_model().embed(texts, batch_size=batch_size)]
+
+    def embed_query(self, text: str) -> List[float]:
+        return next(self._ensure_model().query_embed(text)).tolist()
+
+
 def get_embedding_provider() -> EmbeddingProvider:
     provider_type = settings.EMBEDDING_PROVIDER.lower()
     if provider_type == "mock":
         return MockEmbeddingProvider(dimension=settings.EMBEDDING_DIMENSION)
+    if provider_type == "fastembed":
+        return FastEmbedEmbedding()
     return SentenceTransformersEmbedding.get_instance()

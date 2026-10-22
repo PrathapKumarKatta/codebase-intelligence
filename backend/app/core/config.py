@@ -26,11 +26,20 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+psycopg://localhost:5432/codebase_intelligence"
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value[len(prefix):]
+        return value
+
     # Redis & Celery
     REDIS_URL: str = "redis://localhost:6379/0"
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
     CELERY_TASK_ALWAYS_EAGER: bool = False
+    INGESTION_MODE: str = "celery"
 
     # Storage & Upload Limits
     STORAGE_DIR: str = "./storage"
@@ -38,6 +47,7 @@ class Settings(BaseSettings):
     MAX_EXTRACTED_SIZE_MB: int = 150
     MAX_PROJECT_FILES: int = 2000
     MAX_SINGLE_FILE_SIZE_KB: int = 1024
+    MAX_PROJECT_CHUNKS: int = 10000
 
     # RAG & Embedding Settings
     EMBEDDING_PROVIDER: str = "sentence_transformers"

@@ -1,0 +1,11 @@
+.env*
+!.env.example
+.venv
+**/__pycache__
+**/node_modules
+**/dist
+**/storage
+**/.pytest_cache
+**/.git
+.local-demo.json
+sample_projects/*.zip

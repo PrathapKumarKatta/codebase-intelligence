@@ -20,7 +20,7 @@ export const LoginPage: React.FC = () => {
     try {
       const tokens = await api.login(email, password);
       // Fetch user profile
-      const user = await api.getMe();
+      const user = await api.getMe(tokens.access_token);
       login(tokens.access_token, user);
       navigate("/");
     } catch (err: any) {

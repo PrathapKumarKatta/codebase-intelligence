@@ -29,6 +29,11 @@ export const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({
         setSelectedFile(null);
         return;
       }
+      if (file.size > 4 * 1024 * 1024) {
+        setError("Please select a ZIP under 4 MB for this deployment.");
+        setSelectedFile(null);
+        return;
+      }
       setSelectedFile(file);
       setError(null);
       if (!name) {
@@ -57,7 +62,7 @@ export const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({
       const project = await api.createProject(name.trim());
 
       // 2. Upload ZIP
-      setStatusMessage("Uploading repository archive...");
+      setStatusMessage("Uploading and indexing repository (this can take a few minutes)...");
       await api.uploadCodebase(project.id, selectedFile);
 
       // 3. Poll indexing status
@@ -170,7 +175,7 @@ export const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({
                 <div className="text-center space-y-1.5">
                   <Upload className="w-8 h-8 text-[#8b949e] mx-auto" />
                   <p className="text-sm text-[#c9d1d9]">Click or drag & drop repository ZIP</p>
-                  <p className="text-xs text-[#8b949e]">Supports Python, JS, TS, Java, C/C++ (Max 50MB)</p>
+                  <p className="text-xs text-[#8b949e]">Python, JS, TS, Java, C/C++ · Max 4 MB, 100 source files</p>
                 </div>
               )}
             </label>

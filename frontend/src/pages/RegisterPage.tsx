@@ -33,7 +33,7 @@ export const RegisterPage: React.FC = () => {
       await api.register(email, password);
       // Automatically log in after registration
       const tokens = await api.login(email, password);
-      const user = await api.getMe();
+      const user = await api.getMe(tokens.access_token);
       login(tokens.access_token, user);
       navigate("/");
     } catch (err: any) {

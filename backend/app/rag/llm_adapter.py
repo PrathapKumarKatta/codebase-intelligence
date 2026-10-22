@@ -94,6 +94,9 @@ def get_llm_provider() -> LLMProvider:
     if provider == "groq":
         api_key = settings.LLM_API_KEY
         if not api_key:
+            if settings.INGESTION_MODE == "inline":
+                from fastapi import HTTPException
+                raise HTTPException(status_code=503, detail="Chat is awaiting its model API key.")
             logger.warning("Groq selected but LLM_API_KEY is empty. Falling back to MockLLMProvider.")
             return MockLLMProvider()
         base_url = settings.LLM_BASE_URL or "https://api.groq.com/openai/v1"

@@ -31,6 +31,12 @@ def health_ready(response: Response, db: Session = Depends(get_db)):
         readiness["status"] = "unhealthy"
 
     # Check Redis
+    if settings.INGESTION_MODE == "inline":
+        readiness["redis"] = "not_required"
+        if readiness["status"] != "ready":
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return readiness
+
     try:
         r = redis.Redis.from_url(settings.REDIS_URL, socket_timeout=2.0)
         r.ping()

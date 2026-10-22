@@ -56,3 +56,8 @@ backend/storage/
 *.swo
 .idea/
 .vscode/
+.vercel
+.env*
+.local-demo.json
+.agents/
+skills-lock.json

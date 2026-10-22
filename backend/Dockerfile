@@ -12,9 +12,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy pyproject.toml
 COPY pyproject.toml .
+COPY app ./app
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch && \
     pip install --no-cache-dir .
 
 # Copy application source code

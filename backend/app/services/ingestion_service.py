@@ -139,6 +139,8 @@ class IngestionService:
                 )
 
                 for fc in file_chunks:
+                    if len(all_chunks_to_insert) >= settings.MAX_PROJECT_CHUNKS:
+                        raise ValueError("Archive exceeds the maximum number of indexed chunks.")
                     chunk = CodeChunk(
                         source_file_id=source_file.id,
                         project_id=project_id,

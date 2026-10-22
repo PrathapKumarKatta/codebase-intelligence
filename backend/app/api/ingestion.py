@@ -2,6 +2,7 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Query, UploadFile, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
+from app.core.config import settings
 from app.models.user import User
 from app.repositories.file_repo import FileRepository
 from app.repositories.job_repo import JobRepository
@@ -33,6 +34,14 @@ def upload_codebase(
     )
 
     # Dispatch to background: Try Celery first; if Redis broker is unreachable, fallback to FastAPI background task
+    if settings.INGESTION_MODE == "inline":
+        IngestionService.run_ingestion_pipeline(id, job.id, zip_path, temp_dir)
+        db.refresh(job)
+        if job.status == "failed":
+            from fastapi import HTTPException
+            raise HTTPException(status_code=422, detail="Indexing failed. Try a smaller source archive.")
+        return IngestionJobResponse.model_validate(job)
+
     try:
         ingest_codebase_task.delay(
             str(id), str(job.id), str(zip_path), str(temp_dir)
